@@ -1,20 +1,86 @@
-﻿// SOLID.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
-//
+﻿//Принцип открытости/закрытости: функция saveTo
+//Принцип единственной ответственности: класс Data
+//Принцип разделения интерфейса: Printable
+#include <fstream>
+#include <string>
+#include <stdexcept>
 
-#include <iostream>
-
-int main()
+class IPrintable
 {
-    std::cout << "Hello World!\n";
+public:
+    virtual ~IPrintable() = default;
+
+    virtual std::string print() const = 0;
+};
+
+class Data : public IPrintable
+{
+public:
+    enum class Format
+    {
+        kText,
+        kHTML,
+        kJSON
+    };
+
+    Data(std::string data, Format format)
+        : data_(std::move(data)), format_(format) {}
+
+    std::string print() const override
+    {
+        switch (format_)
+        {
+        case Format::kText:
+            return data_;
+        case Format::kHTML:
+            return "<html>" + data_ + "</html>";
+        case Format::kJSON:
+            return "{ \"data\": \"" + data_ + "\"}";
+        default:
+            throw std::runtime_error("Invalid format!");
+        }
+    }
+
+private:
+    std::string data_;
+    Format format_;
+};
+
+class ISaver
+{
+public:
+    virtual ~ISaver() = default;
+    virtual void save(std::ofstream& file, const IPrintable& printable) = 0;
+};
+
+class TextSaver : public ISaver
+{
+public:
+    void save(std::ofstream& file, const IPrintable& printable) override
+    {
+        file << printable.print();
+    }
+};
+
+class HTMLSaver : public ISaver
+{
+public:
+    void save(std::ofstream& file, const IPrintable& printable) override
+    {
+        file << printable.print();
+    }
+};
+
+class JSONSaver : public ISaver
+{
+public:
+    void save(std::ofstream& file, const IPrintable& printable) override
+    {
+        file << printable.print();
+    }
+};
+
+void saveData(std::ofstream& file, const IPrintable& printable, ISaver& saver)
+{
+    saver.save(file, printable);
 }
-
-// Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
-// Отладка программы: F5 или меню "Отладка" > "Запустить отладку"
-
-// Советы по началу работы 
-//   1. В окне обозревателя решений можно добавлять файлы и управлять ими.
-//   2. В окне Team Explorer можно подключиться к системе управления версиями.
-//   3. В окне "Выходные данные" можно просматривать выходные данные сборки и другие сообщения.
-//   4. В окне "Список ошибок" можно просматривать ошибки.
-//   5. Последовательно выберите пункты меню "Проект" > "Добавить новый элемент", чтобы создать файлы кода, или "Проект" > "Добавить существующий элемент", чтобы добавить в проект существующие файлы кода.
-//   6. Чтобы снова открыть этот проект позже, выберите пункты меню "Файл" > "Открыть" > "Проект" и выберите SLN-файл.
